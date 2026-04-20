@@ -24,13 +24,13 @@ const AVATAR_EMOJIS = ["😎", "🤠", "🧑‍✈️", "🧳", "🌴", "🏔️
 // 3. Go to Realtime Database → Create Database → Start in TEST mode
 // 4. Replace the config below with your project's config
 const firebaseConfig = {
-  apiKey: "AIzaSyDEMO_REPLACE_ME",
-  authDomain: "bucketlist-lt.firebaseapp.com",
-  databaseURL: "https://bucketlist-lt-default-rtdb.firebaseio.com",
-  projectId: "bucketlist-lt",
-  storageBucket: "bucketlist-lt.appspot.com",
-  messagingSenderId: "000000000000",
-  appId: "1:000000000000:web:000000000000"
+  apiKey: "AIzaSyAcodwyVWt7cI0qq_alQcskokMlBafuNaA",
+  authDomain: "bucketlist-3fe78.firebaseapp.com",
+  databaseURL: "https://bucketlist-3fe78-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "bucketlist-3fe78",
+  storageBucket: "bucketlist-3fe78.firebasestorage.app",
+  messagingSenderId: "433588655915",
+  appId: "1:433588655915:web:05e1f371f39c1cf532176e"
 };
 
 // Initialize Firebase (only if configured)
