@@ -17,6 +17,38 @@ const AVATARS_KEY = "bl_avatars";  // shared map: { "userName": "avatarUrl or em
 // Fun default avatar emojis to pick from
 const AVATAR_EMOJIS = ["😎", "🤠", "🧑‍✈️", "🧳", "🌴", "🏔️", "🦩", "🐻", "🦁", "🎒", "🚀", "🌺", "🎯", "🏄", "🧗"];
 
+// ============ FIREBASE CONFIG ============
+// To set up your own Firebase:
+// 1. Go to https://console.firebase.google.com
+// 2. Create a new project (free Spark plan)
+// 3. Go to Realtime Database → Create Database → Start in TEST mode
+// 4. Replace the config below with your project's config
+const firebaseConfig = {
+  apiKey: "AIzaSyDEMO_REPLACE_ME",
+  authDomain: "bucketlist-lt.firebaseapp.com",
+  databaseURL: "https://bucketlist-lt-default-rtdb.firebaseio.com",
+  projectId: "bucketlist-lt",
+  storageBucket: "bucketlist-lt.appspot.com",
+  messagingSenderId: "000000000000",
+  appId: "1:000000000000:web:000000000000"
+};
+
+// Initialize Firebase (only if configured)
+let db = null;
+let useFirebase = false;
+try {
+  if (typeof firebase !== "undefined" && firebaseConfig.apiKey !== "AIzaSyDEMO_REPLACE_ME") {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+    useFirebase = true;
+    console.log("🔥 Firebase connected — data will sync across all users!");
+  } else {
+    console.log("📦 Using localStorage (offline mode). Set up Firebase for shared data.");
+  }
+} catch (err) {
+  console.warn("Firebase init failed, falling back to localStorage:", err);
+}
+
 // ---- State ----
 let currentUser = localStorage.getItem(USER_KEY) || "";
 let items = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -120,7 +152,7 @@ const avatarPreviewImg  = $("#avatar-preview");
     } else if (selectedEmoji) {
       avatars[name] = selectedEmoji.dataset.avatar;
     }
-    localStorage.setItem(AVATARS_KEY, JSON.stringify(avatars));
+    saveAvatars();
 
     showApp();
   });
@@ -272,6 +304,7 @@ function showApp() {
   appScreen.hidden = false;
   userDisplay.innerHTML = avatarHTML(currentUser, "mini") + " " + esc(currentUser);
   setView(currentView);
+  initFirebaseSync();
   goOnline();
   renderItems();
 }
@@ -644,7 +677,7 @@ function deleteProfile() {
 
   // Remove avatar
   delete avatars[name];
-  localStorage.setItem(AVATARS_KEY, JSON.stringify(avatars));
+  saveAvatars();
 
   // Go offline
   goOffline();
@@ -700,6 +733,10 @@ function saveProfile() {
       online[newName] = online[oldName];
       delete online[oldName];
       localStorage.setItem(ONLINE_KEY, JSON.stringify(online));
+      if (useFirebase) {
+        db.ref("onlineUsers/" + encodeFirebaseKey(oldName)).remove();
+        db.ref("onlineUsers/" + encodeFirebaseKey(newName)).set(online[newName]);
+      }
     }
 
     // Move avatar
@@ -709,7 +746,7 @@ function saveProfile() {
   currentUser = newName;
   localStorage.setItem(USER_KEY, newName);
   avatars[newName] = newAvatar;
-  localStorage.setItem(AVATARS_KEY, JSON.stringify(avatars));
+  saveAvatars();
 
   userDisplay.innerHTML = avatarHTML(currentUser, "mini") + " " + esc(currentUser);
   closeProfileModal();
@@ -1471,6 +1508,54 @@ $$(".tab-btn").forEach(btn => {
 // ============ PERSISTENCE ============
 function saveItems() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+  if (useFirebase) {
+    db.ref("items").set(items);
+  }
+}
+
+function saveAvatars() {
+  localStorage.setItem(AVATARS_KEY, JSON.stringify(avatars));
+  if (useFirebase) {
+    db.ref("avatars").set(avatars);
+  }
+}
+
+// Load shared data from Firebase on startup and listen for live changes
+let firebaseSyncStarted = false;
+function initFirebaseSync() {
+  if (!useFirebase || firebaseSyncStarted) return;
+  firebaseSyncStarted = true;
+
+  // Sync items — live updates from other users
+  db.ref("items").on("value", (snapshot) => {
+    const data = snapshot.val();
+    if (data && Array.isArray(data)) {
+      items = data;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      renderItems();
+    } else if (data === null) {
+      // Database empty — push local items if we have any
+      if (items.length > 0) db.ref("items").set(items);
+    }
+  });
+
+  // Sync avatars — live updates
+  db.ref("avatars").on("value", (snapshot) => {
+    const data = snapshot.val();
+    if (data && typeof data === "object") {
+      avatars = data;
+      localStorage.setItem(AVATARS_KEY, JSON.stringify(avatars));
+      renderItems();
+      renderOnlineUsers();
+    }
+  });
+
+  // Sync online users
+  db.ref("onlineUsers").on("value", (snapshot) => {
+    const data = snapshot.val() || {};
+    localStorage.setItem(ONLINE_KEY, JSON.stringify(data));
+    renderOnlineUsers();
+  });
 }
 
 // ============ CONFETTI ============
@@ -1652,19 +1737,34 @@ function goOffline() {
   const online = JSON.parse(localStorage.getItem(ONLINE_KEY) || "{}");
   delete online[currentUser];
   localStorage.setItem(ONLINE_KEY, JSON.stringify(online));
+  if (useFirebase) db.ref("onlineUsers/" + encodeFirebaseKey(currentUser)).remove();
   renderOnlineUsers();
 }
 
 function updateOnlineStatus() {
   const online = JSON.parse(localStorage.getItem(ONLINE_KEY) || "{}");
   online[currentUser] = Date.now();
-  // Clean up stale entries (older than 15 seconds)
   const cutoff = Date.now() - 15000;
   for (const name in online) {
     if (online[name] < cutoff) delete online[name];
   }
   localStorage.setItem(ONLINE_KEY, JSON.stringify(online));
+  if (useFirebase) {
+    db.ref("onlineUsers/" + encodeFirebaseKey(currentUser)).set(Date.now());
+    // Clean stale from Firebase too
+    db.ref("onlineUsers").once("value", (snap) => {
+      const data = snap.val() || {};
+      for (const key in data) {
+        if (data[key] < cutoff) db.ref("onlineUsers/" + key).remove();
+      }
+    });
+  }
   renderOnlineUsers();
+}
+
+// Firebase keys can't contain . $ # [ ] / so encode them
+function encodeFirebaseKey(str) {
+  return str.replace(/[.#$\[\]\/]/g, "_");
 }
 
 function renderOnlineUsers() {
