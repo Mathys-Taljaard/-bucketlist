@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bucketlist L&amp;T ✈️</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🗼</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=8" />
+</head>
+<body>
+
+  <!-- ===== LOGIN SCREEN ===== -->
+  <div id="login-screen" class="screen">
+    <div class="login-bg"></div>
+    <div class="login-overlay"></div>
+
+    <div class="floating-emoji e1">🗼</div>
+    <div class="floating-emoji e2">✈️</div>
+    <div class="floating-emoji e3">🌍</div>
+
+    <div class="login-card glass" id="login-card">
+      <h1 class="login-title">Bucketlist L&amp;T ✨</h1>
+      <p class="login-subtitle">Dream it. Plan it. Live it.</p>
+
+      <!-- Step 1: Code -->
+      <form id="code-form" class="login-form">
+        <label class="form-label">Secret Code</label>
+        <input type="password" id="code-input" placeholder="Enter the magic code..." autocomplete="off" />
+        <p id="code-error" class="error-msg" hidden></p>
+        <button type="submit" class="btn-gold">
+          🔓 Unlock Adventure
+        </button>
+      </form>
+
+      <!-- Step 2: Name + Avatar -->
+      <form id="name-form" class="login-form" hidden>
+        <div class="celebrate-emoji">🎉</div>
+        <p class="login-subtitle">Welcome, adventurer! What should we call you?</p>
+        <input type="text" id="name-input" placeholder="Your name..." maxlength="20" autocomplete="off" />
+
+        <label class="form-label" style="margin-top:.6rem;">📸 Pick your avatar <span style="opacity:.5">(optional)</span></label>
+        <div class="avatar-picker" id="avatar-picker"></div>
+        <div class="avatar-custom">
+          <label class="btn-file-upload" tabindex="0">
+            📁 Choose photo
+            <input type="file" id="avatar-file" accept="image/*" hidden />
+          </label>
+          <input type="url" id="avatar-url" placeholder="Or paste image URL..." autocomplete="off" />
+          <div class="avatar-preview-wrap" id="avatar-preview-wrap" hidden>
+            <img id="avatar-preview" class="avatar-preview-img" alt="Preview" />
+          </div>
+        </div>
+
+        <button type="submit" class="btn-gold">
+          ✈️ Let's Go!
+        </button>
+      </form>
+
+      <p class="login-hint">✨ Share the code with your travel buddies</p>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div id="app-screen" class="screen" hidden>
+    <div class="app-bg"></div>
+    <div class="app-overlay"></div>
+
+    <!-- Header -->
+    <header class="header glass" id="header">
+      <div class="header-inner">
+        <div class="header-left">
+          <span class="header-icon">🗼</span>
+          <div>
+            <h1 class="header-title">Bucketlist L&amp;T</h1>
+            <p class="header-greeting">Hey <span id="user-display" class="gold"></span> — <span id="quote-text">dream big!</span> ✨</p>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="stats" id="stats">
+            <span>📍 <span id="stat-total">0</span> dreams</span>
+            <span>✅ <span id="stat-done">0</span> done</span>
+          </div>
+          
+          <!-- Progress bar -->
+          <div class="progress-wrap" id="progress-wrap" hidden>
+            <div class="progress-bar">
+              <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <span class="progress-label" id="progress-label">0%</span>
+          </div>
+
+          <div class="filter-pills">
+            <button class="filter-pill active" data-filter="all">🌍 All</button>
+            <button class="filter-pill" data-filter="todo">📋 To Do</button>
+            <button class="filter-pill" data-filter="done">✅ Done</button>
+          </div>
+          <div class="view-toggle">
+            <button class="view-btn active" id="view-grid" title="Grid view">▦</button>
+            <button class="view-btn" id="view-list" title="List view">☰</button>
+            <span class="view-sep">|</span>
+            <button class="view-btn" id="view-group" title="Group by person">👥</button>
+          </div>
+          <button class="btn-icon" id="surprise-btn" title="Surprise me! Pick a random item">🎲</button>
+          <button class="btn-icon" id="edit-profile-btn" title="Edit profile">✏️</button>
+          <button class="btn-icon" id="logout-btn" title="Logout">🚪</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tab bar: My List vs Explore -->
+    <nav class="tab-bar" id="tab-bar">
+      <button class="tab-btn active" data-tab="mylist">📋 My Bucket List</button>
+      <button class="tab-btn" data-tab="explore">🧭 Explore Destinations</button>
+    </nav>
+
+    <!-- Items grid -->
+    <main class="main-content">
+      <!-- MY BUCKET LIST TAB -->
+      <div id="tab-mylist">
+        <div id="empty-state" class="empty-state">
+          <div class="empty-emoji">✈️</div>
+          <h2>Your adventure awaits!</h2>
+          <p>Add your first bucket list item and start dreaming ✨</p>
+          <button class="btn-gold" id="empty-add-btn">🌟 Add Your First Dream</button>
+        </div>
+        <div id="items-grid" class="items-grid"></div>
+      </div>
+
+      <!-- EXPLORE TAB -->
+      <div id="tab-explore" hidden>
+        <div class="explore-header">
+          <h2 class="explore-title">🧭 Explore Amazing Destinations</h2>
+          <p class="explore-subtitle">Get inspired! Click any destination to add it to your bucket list.</p>
+          <div class="explore-categories" id="explore-categories">
+            <button class="explore-cat active" data-cat="all">🌍 All</button>
+            <button class="explore-cat" data-cat="beach">🏖️ Beach</button>
+            <button class="explore-cat" data-cat="adventure">🏔️ Adventure</button>
+            <button class="explore-cat" data-cat="culture">🏛️ Culture</button>
+            <button class="explore-cat" data-cat="food">🍽️ Food</button>
+            <button class="explore-cat" data-cat="nature">🌿 Nature</button>
+            <button class="explore-cat" data-cat="romantic">💕 Romantic</button>
+          </div>
+        </div>
+        <div id="explore-grid" class="explore-grid"></div>
+      </div>
+    </main>
+
+    <!-- Floating add button -->
+    <button class="fab" id="fab" title="Add bucket list item">＋</button>
+  </div>
+
+  <!-- ===== ADD ITEM MODAL ===== -->
+  <div id="add-modal" class="modal-backdrop" hidden>
+    <div class="modal glass" id="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">🌟 New Adventure</h2>
+        <button class="btn-icon modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Place or Activity</label>
+        <input type="text" id="item-title" placeholder="e.g., Eiffel Tower, Skydiving, Northern Lights..." />
+
+        <button class="btn-magic" id="auto-fetch-btn">
+          <span id="fetch-text">🤖 Auto-Fill with AI</span>
+          <span id="fetch-loading" hidden>⏳ AI is thinking...</span>
+        </button>
+
+        <!-- Photo selector -->
+        <div id="photo-selector" class="photo-selector" hidden>
+          <label class="form-label">Choose a photo</label>
+          <div id="photo-grid" class="photo-grid"></div>
+        </div>
+
+        <label class="form-label">📝 Interesting Facts</label>
+        <textarea id="item-facts" placeholder="What makes this special?" rows="3"></textarea>
+
+        <label class="form-label">🔗 Useful Links</label>
+        <div class="quick-links-bar" id="quick-links-bar">
+          <button type="button" class="quick-link-btn" data-type="booking">🏨 Booking</button>
+          <button type="button" class="quick-link-btn" data-type="flights">✈️ Flights</button>
+          <button type="button" class="quick-link-btn" data-type="tripadvisor">⭐ TripAdvisor</button>
+          <button type="button" class="quick-link-btn" data-type="maps">📍 Maps</button>
+        </div>
+        <div id="links-container" class="links-container">
+          <div class="link-row">
+            <input type="url" class="link-input" placeholder="https://..." />
+            <input type="text" class="link-label-input" placeholder="Label (e.g. Official site)" />
+          </div>
+        </div>
+        <button type="button" class="btn-add-link" id="add-link-btn">＋ Add another link</button>
+
+        <label class="form-label">🖼️ Image URL (or use auto-fetch)</label>
+        <input type="url" id="item-image" placeholder="https://... (optional)" />
+
+        <!-- Preview -->
+        <div id="image-preview" class="image-preview" hidden>
+          <img id="preview-img" alt="Preview" />
+        </div>
+
+        <div class="modal-buttons">
+          <button class="btn-gold btn-save" id="save-btn">
+            ＋ Add to Bucket List 🎉
+          </button>
+          <button class="btn-cancel" id="cancel-btn">
+            Cancel
+          </button>
+        </div>
+
+        <p class="modal-footer">Adding as <strong id="modal-username" class="gold"></strong> ✨</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ONLINE USERS (fixed top-right) ===== -->
+  <div class="online-users" id="online-users" title="Currently online"></div>
+
+  <!-- ===== PROFILE EDIT MODAL ===== -->
+  <div id="profile-modal" class="modal-backdrop" hidden>
+    <div class="modal glass" id="profile-modal-content">
+      <div class="modal-header">
+        <h2>✏️ Edit Profile</h2>
+        <button class="btn-icon modal-close" id="profile-modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="form-label">Your Name</label>
+        <input type="text" id="profile-name" placeholder="Your name..." maxlength="20" autocomplete="off" />
+
+        <label class="form-label" style="margin-top:.6rem;">📸 Your Avatar</label>
+        <div class="avatar-picker" id="profile-avatar-picker"></div>
+        <div class="avatar-custom">
+          <label class="btn-file-upload" tabindex="0">
+            📁 Choose photo
+            <input type="file" id="profile-avatar-file" accept="image/*" hidden />
+          </label>
+          <input type="url" id="profile-avatar-url" placeholder="Or paste image URL..." autocomplete="off" />
+          <div class="avatar-preview-wrap" id="profile-avatar-preview-wrap" hidden>
+            <img id="profile-avatar-preview" class="avatar-preview-img" alt="Preview" />
+          </div>
+        </div>
+
+        <div class="modal-buttons">
+          <button class="btn-gold btn-save" id="profile-save-btn">💾 Save Profile</button>
+          <button class="btn-cancel" id="profile-cancel-btn">Cancel</button>
+        </div>
+        <div class="profile-danger-zone">
+          <button class="btn-danger" id="profile-delete-btn">🗑️ Delete My Profile & All My Items</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ITEM DETAIL MODAL ===== -->
+  <div id="detail-modal" class="modal-backdrop" hidden>
+    <div class="modal glass detail-modal-content">
+      <div class="modal-header">
+        <h2 id="detail-title">🌍 Item Details</h2>
+        <button class="btn-icon modal-close" id="detail-modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="detail-body">
+        <!-- filled dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONFETTI CONTAINER ===== -->
+  <div id="confetti-container"></div>
+
+  <script src="app.js?v=8"></script>
+</body>
+</html>
