@@ -1509,7 +1509,10 @@ $$(".tab-btn").forEach(btn => {
 function saveItems() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   if (useFirebase) {
-    db.ref("items").set(items);
+    // Store as object keyed by item id for reliable Firebase sync
+    const itemsObj = {};
+    items.forEach(item => { itemsObj[item.id] = item; });
+    db.ref("items").set(itemsObj);
   }
 }
 
@@ -1529,8 +1532,11 @@ function initFirebaseSync() {
   // Sync items — live updates from other users
   db.ref("items").on("value", (snapshot) => {
     const data = snapshot.val();
-    if (data && Array.isArray(data)) {
-      items = data;
+    if (data) {
+      // Firebase may return object with numeric keys instead of array — convert it
+      items = Array.isArray(data) ? data : Object.values(data);
+      // Filter out any null/undefined entries (Firebase sparse arrays)
+      items = items.filter(i => i && i.id);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
       renderItems();
     } else if (data === null) {
